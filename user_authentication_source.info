@@ -1,0 +1,5 @@
+; $Id$
+name = user_authentication_source
+description = Change an existing user's authentication source
+package = Cornell University Library
+core = 7.x
