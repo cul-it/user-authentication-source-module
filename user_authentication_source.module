@@ -45,7 +45,7 @@ function user_authentication_source_action(&$user, $context) {
   if (is_array($authmaps)) {
     $keys = array_keys($authmaps);
     foreach ($keys as $key) {
-      $userinfo["$key"] = NULL;
+      $userinfo["authname_$key"] = NULL;
     }
     dpm($userinfo);
     user_set_authmaps($user, $userinfo);
