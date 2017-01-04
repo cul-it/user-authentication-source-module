@@ -42,6 +42,22 @@ function user_authentication_source_action(&$user, $context) {
   $source = $context['authentication_source'];
   $name = $user->name;
 
+  switch ($source) {
+    case 'simplesamlphp_auth':
+      // saml uses full email for the Authentication name
+      if (strpos($name, '@cornell.edu') === FALSE) {
+        $name .= '@cornell.edu';
+      }
+      break;
+    case 'culauth':
+      // CUWebAuth uses netid for the Authentication name
+      if (($pos = strpos($name, '@cornell.edu')) !== FALSE) {
+        $name = substr($name, 0, $pos);
+      }
+      break;
+  }
+
+
   $userinfo = array();
 
   // delete existing authmaps
