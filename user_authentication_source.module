@@ -40,22 +40,23 @@ function user_authentication_source_action_submit($form, $form_state) {
 
 function user_authentication_source_action(&$user, $context) {
   $source = $context['authentication_source'];
-  // get and delete existing authmaps
-  $authmaps = user_get_authmaps($user->name);
+  $name = $user->name;
+
+  $userinfo = array();
+
+  // delete existing authmaps
+  $authmaps = user_get_authmaps($name);
   if (is_array($authmaps)) {
     $keys = array_keys($authmaps);
     foreach ($keys as $key) {
       $userinfo["authname_$key"] = NULL;
     }
-    dpm($userinfo);
-    user_set_authmaps($user, $userinfo);
-    user_save($user);
   }
-  // replace with new authmap
-  $userinfo = array(
-    "authname_$source" => $user->name,
-    );
+
+  // new authmap
+  $userinfo["authname_$source"] = $name;
+
   user_set_authmaps($user, $userinfo);
-  user_save($user);
+
   watchdog('user', 'Reset user authentication source: %name %email to %source.', array('%name' => $user->name, '%email' => '<' . $user->mail . '>', '%source' => $source), WATCHDOG_NOTICE);
 }
