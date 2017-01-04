@@ -60,16 +60,18 @@ function user_authentication_source_action(&$user, $context) {
   $userinfo = array();
 
   // delete existing authmaps
-  $authmaps = user_get_authmaps($name);
+  $authmaps = user_get_authmaps($old_auth_name);
   if (is_array($authmaps)) {
     $keys = array_keys($authmaps);
     foreach ($keys as $key) {
-      $userinfo["authname_$key"] = NULL;
+      if ($key == $old_auth_source) {
+        $userinfo["authname_$key"] = NULL;
+      }
     }
   }
 
   // new authmap
-  $userinfo["authname_$source"] = $name;
+  $userinfo["authname_$source"] = $auth_name;
 
   user_set_authmaps($user, $userinfo);
 
