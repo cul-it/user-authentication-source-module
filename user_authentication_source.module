@@ -6,58 +6,56 @@
  *
  */
 
-
-/**
- * Implements hook_user_operations().
- */
-function user_authentication_source_user_operations() {
-  $operations = array(
-    'export_saml' => array(
-      'label' => t('Let user authenticate with SimpleSAML'),
-      'callback' => 'user_authentication_source_claim_user_saml',
-    ),
-    'export' => array(
-      'label' => t('Let user authenticate with CUWebAuth'),
-      'callback' => 'user_authentication_source_claim_user',
+function user_authentication_source_action_info() {
+  return array(
+    'user_authentication_source_action' => array(
+      'type' => 'user',
+      'label' => t('Change authentication source for a user'),
+      'configurable' => TRUE,
+      'triggers' => array('any'),
     ),
   );
-  return $operations;
 }
 
-/**
- * Mark the user for CUWebAuth authentication
- * @param array $accounts
- */
-function user_authentication_source_claim_user($users, $view) {
-  // see http://api.drupal.org/api/drupal/modules--user--user.module/function/user_external_login_register/6
-  $module = 'cuwebauth';
-  foreach ($users as $uid) {
-    // TODO Convert "user_load" to "user_load_multiple" if "$uid" is other than a uid.
-    // To return a single user object, wrap "user_load_multiple" with "array_shift" or equivalent.
-    // Example: array_shift(user_load_multiple(array(), $uid))
-    $auser = user_load($uid);
-    $userinfo = array(
-      "authname_$module" => $auser->name,
-      );
-    $account = user_save($auser, $userinfo);
-  }
+function user_authentication_source_action_form($options) {
+  $form = array();
+  $form['hero'] = array(
+    '#type' => 'select',
+    '#title' => t('Choose your authentication source'),
+    '#options' => array(
+      'simplesamlphp_auth' => t('SimpleSAML'),
+      'cuwebauth' => t('CUWebAuth'),
+    ),
+    '#default_value' => !empty($options['hero']) ? $options['hero'] : '',
+  );
+
+  return $form;
 }
 
-/**
- * Mark the user for SimpleSAML authentication
- * @param array $accounts
- */
-function user_authentication_source_claim_user_saml($users, $view) {
-  // see http://api.drupal.org/api/drupal/modules--user--user.module/function/user_external_login_register/6
-  $module = 'simplesamlphp_auth';
-  foreach ($users as $uid) {
-    // TODO Convert "user_load" to "user_load_multiple" if "$uid" is other than a uid.
-    // To return a single user object, wrap "user_load_multiple" with "array_shift" or equivalent.
-    // Example: array_shift(user_load_multiple(array(), $uid))
-    $auser = user_load($uid);
-    $userinfo = array(
-      "authname_$module" => $auser->name,
-      );
-    $account = user_save($auser, $userinfo);
+function user_authentication_source_action_submit($form, $form_state) {
+  return array(
+    'authentication_source' => $form_state['values']['hero'],
+    );
+}
+
+function user_authentication_source_action(&$user, $context) {
+  $source = $context['authentication_source'];
+  // get and delete existing authmaps
+  $authmaps = user_get_authmaps($user->name);
+  if (is_array($authmaps)) {
+    $keys = array_keys($authmaps);
+    foreach ($keys as $key) {
+      $userinfo["$key"] = NULL;
+    }
+    dpm($userinfo);
+    user_set_authmaps($user, $userinfo);
+    user_save($user);
   }
+  // replace with new authmap
+  $userinfo = array(
+    "authname_$source" => $user->name,
+    );
+  user_set_authmaps($user, $userinfo);
+  user_save($user);
+  watchdog('user', 'Reset user authentication source: %name %email to %source.', array('%name' => $user->name, '%email' => '<' . $user->mail . '>', '%source' => $source), WATCHDOG_NOTICE);
 }
