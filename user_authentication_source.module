@@ -40,20 +40,19 @@ function user_authentication_source_action_submit($form, $form_state) {
 
 function user_authentication_source_action(&$user, $context) {
   $source = $context['authentication_source'];
-  $name = $user->name;
 
   switch ($source) {
     case 'simplesamlphp_auth':
       // saml uses full email for the Authentication name
-      if (strpos($name, '@cornell.edu') === FALSE) {
-        $name .= '@cornell.edu';
-      }
+      $auth_name = $user->mail;
+      $old_auth_name = $user->name;
+      $old_auth_source = 'culauth';
       break;
     case 'culauth':
       // CUWebAuth uses netid for the Authentication name
-      if (($pos = strpos($name, '@cornell.edu')) !== FALSE) {
-        $name = substr($name, 0, $pos);
-      }
+      $auth_name = $user->name;
+      $old_auth_name = $user->mail;
+      $old_auth_source = 'simplesamlphp_auth';
       break;
   }
 
