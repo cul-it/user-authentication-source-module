@@ -40,21 +40,38 @@ function user_authentication_source_action_submit($form, $form_state) {
 
 function user_authentication_source_action(&$user, $context) {
   $source = $context['authentication_source'];
-  $name = $user->name;
+
+  switch ($source) {
+    case 'simplesamlphp_auth':
+      // saml uses full email for the Authentication name
+      $auth_name = $user->mail;
+      $old_auth_name = $user->name;
+      $old_auth_source = 'culauth';
+      break;
+    case 'culauth':
+      // CUWebAuth uses netid for the Authentication name
+      $auth_name = $user->name;
+      $old_auth_name = $user->mail;
+      $old_auth_source = 'simplesamlphp_auth';
+      break;
+  }
+
 
   $userinfo = array();
 
   // delete existing authmaps
-  $authmaps = user_get_authmaps($name);
+  $authmaps = user_get_authmaps($old_auth_name);
   if (is_array($authmaps)) {
     $keys = array_keys($authmaps);
     foreach ($keys as $key) {
-      $userinfo["authname_$key"] = NULL;
+      if ($key == $old_auth_source) {
+        $userinfo["authname_$key"] = NULL;
+      }
     }
   }
 
   // new authmap
-  $userinfo["authname_$source"] = $name;
+  $userinfo["authname_$source"] = $auth_name;
 
   user_set_authmaps($user, $userinfo);
 
