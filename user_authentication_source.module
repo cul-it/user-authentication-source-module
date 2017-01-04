@@ -24,7 +24,7 @@ function user_authentication_source_action_form($options) {
     '#title' => t('Choose your authentication source'),
     '#options' => array(
       'simplesamlphp_auth' => t('SimpleSAML'),
-      'cuwebauth' => t('CUWebAuth'),
+      'culauth' => t('CUWebAuth'),
     ),
     '#default_value' => !empty($options['hero']) ? $options['hero'] : '',
   );
